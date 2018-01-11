@@ -1,0 +1,9 @@
+/*
+-- Query: SELECT Students_number
+FROM `oef1`.`students`
+LIMIT 0, 1000
+
+-- Date: 2017-12-14 16:14
+*/
+INSERT INTO `students` (`Students_number`) VALUES (2654897);
+INSERT INTO `students` (`Students_number`) VALUES (2654658);

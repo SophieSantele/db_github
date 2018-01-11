@@ -1,0 +1,423 @@
+###database werken###
+															LES1
+# als root inloggen
+mysql -uroot -p
+
+#guest inloggn
+mysql
+
+#tabelen van databasen tonen
+show databases;
+use database bd;
+show tables from db;
+show columns from tablename;
+
+#databasen creeren
+eerst moet je naar je rootuser gaan in mysql
+create  database db;
+grant all ON db.* TO guest@localhost;
+weer naar terminal
+mysql db < bestandslocatie
+
+#table creeren in zelf gemaakte database
+CREATE TABLE `students` (
+`Students_number` int (7) NOT NULL,
+`name` varchar(45) DEFAULT NULL,
+`last_name` varchar(45) DEFAULT NULL,
+`birthdate` date DEFAULT NULL,
+`sex` enum('M','V') DEFAULT NULL);
+
+kolom types staan in ppt
+
+#bijsteken
+insert into tablenaam (kolomnaam1, kolomnaam2, kolomnaam3) VALUES  (56452, 'Sophie','santele');
+
+#selecteren 
+select kolomnaam1, kolomnaam2;
+nu zal deze colommen geven
+
+#orderen
+select kolomnaam1, kolomnaam2; ORDER BY name asc;
+
+#wanneer je alle colommen wilt zien
+SELECT * FROM tablenaam;
+
+	#oef1
+	use biodb
+	SELECT * FROM modorg;
+	SELECT genus, species, draft FROM modorg ORDER BY draft;
+
+	#oef2
+	use biodb
+	SELECT * FROM modorg ORDER BY nchr DESC, genus, species;
+
+	#oef3
+SELECT concat(genus, species), round(gsize/1000, 4), gsize/nchr, year(draft)  FROM modorg ORDER BY gsize/nchr;
+
+#colommen namen geven
+select concat(genus," ",species) AS name, gsize/nchr as avgsize from modorg
+
+#oef 4
+select * from modorg WHERE year(draft) > 2005 and class ="Mammals";
+
+#oef5
+zelf gevonden:
+select * from modorg where  nchr/gsize < 100 and nchr/gsize > 10;
+opl:
+select * from modorg where nchr/gsize <between 10 and 100;
+
+#oef6
+select * from modorg where genus like 'A%' or genus like 'B%' or genus like 'C%' or genus like 'D%' or genus like 'D%'
+of 
+select * from modorg where genus >= 'A' and genus <'F';
+of 
+select * from modorg where genus rlike '^[A-E]';
+
+#oef7
+select distinct(class) from modorg order by class;
+
+#oef 8 
+select genus, species from modorg order by gsize desc limit 3;
+
+#oef 9
+select count(class) from modorg where class='Mammals';
+
+#oef 10
+ select class, count(*) from modorg group by class;
+ de distcint moet er niet bij wnt je doet group by.
+ 
+#oef11
+select class, min(gsize) as min, max(gsize) as max from modorg where gsize is not null group by class order by max desc;
+
+#oef11
+select class, AVG(nchr) as avg from modorg group by class having count(*) > 1 order by avg desc;
+
+#oef12
+use bioinf_testdb
+SHOW tables FROM gene 
+SHOW columns FROM gene
+(SELECT gene_name FROM gene WHERE gene_name = 'HOTAIR';
+Select gene_name, chromosome, seq_region_start, seq_region_end, (seq_region_end - seq_region_start + 1) as size from gene where gene_name="HOTAIR";
+(DE +1 ALS JE 3-1 DOET KOM JE 2 UIT MAAR JE HEBT WEL 3 GETALLEN)
+
+#ontbrekende vraag - ELKE SPACIE IS NIEUWE OEF-
+
+SELECT gene_name, description FROM gene WHERE description LIKE '%prostatecancer%';
+SELECT gene_name, description FROM gene WHERE description LIKE '%prostate%' AND description LIKE '%cancer%';
+
+SELECT DISTINCT(gene_name) FROM gene WHERE chromosome = 'X' ORDER BY gene_name;
+
+SELECT biotype, count(biotype) as 'occurence biotype' FROM gene GROUP BY biotype;
+
+SELECT * FROM gene where chromosome = 20 AND  44002590 between seq_region_start and seq_region_end;
+
+of 
+
+(SELECT gene_name, gene_id, chromosome, seq_region_start, seq_region_end FROM gene where chromosome = 20 AND  44002590 between seq_region_start and seq_region_end;)
+SELECT * FROM gene where chromosome = 20 AND seq_region_start <= 44002590 and seq_region_end >= 44002590;
+
+SELECT COUNT(*), chromosome FROM gene GROUP BY chromosome ORDER BY COUNT(*) DESC LIMIT 1 OFFSET 1;
+
+SELECT COUNT(*), seq_region_strand FROM gene GROUP BY seq_region_strand ORDER BY COUNT(*) DESC LIMIT 1;
+
+SELECT COUNT(*),biotype FROM transcript WHERE status = 'NOVEL' GROUP BY biotype ORDER BY COUNT(*) DESC LIMIT 1;
+
+SELECT biotype, min(seq_region_start), max(seq_region_end) FROM transcript WHERE status = 'KNOWN' GROUP BY biotype HAVING COUNT(*) > 10;
+
+SELECT COUNT(*) FROM exon WHERE phase != end_phase;
+									
+										LES 2
+										
+#oef1 p14
+mysql
+show databases
+use testinf_testdb
+show tables
+show coloms from gene
+select biotype,count(*) from gene group by biotype order by count(*) desc limit 4;
+
+je kan ook  limit 1 offset 3;   gebruiken dat is voor de 4de te toneen
+
+
+#oef2 p14
+select status,count(*) from gene group by status;
+
+#oef3 p14
+select biotype,count(*) from gene WHERE status = 'KNOWN' group by biotype, order by count(*) desc;
+
+of 
+oplossing: les maar ???
+select biotype,count(*) from gene group by biotype,status order by count(*) desc;
+
+
+#oef4 p14
+opl les:
+select biotype, (sum(seq_region_end - seq_region_start  +1)/3000000000) as percent from gene group by biotype having percent >= 0.03 order by desc;
+
+of 
+
+select biotype, (sum(seq_region_end - seq_region_start  +1)/3000000000)*100 as percent from gene group by biotype having percent > 3 order by desc;
+
+#oef1 p30
+stappen:
+select columns from gene -> en alle andere tabeln
+
+select acc,len,descr from gene;
+
+je tweede table er aan toevoegen (je mag dn je kolom namen van ene colom zetten bij from gene colom) 
+select concat(genus," ",species) as org_name, acc, len, descr from gene join modorg on gene.mo_id=modorg.id;
+
+je 3de table toevoeen
+select concat(genus," ",species) as org_name, acc, len, descr, name from gene join modorg on gene.mo_id=modorg.id join class on modorg.class_id = class.id;
+
+#joins
+inner joins = toont elken results die in beide tebelen aanwezig zijn
+left join : geeft alle rijen uit linker tabel en toont niet de results vn linker tabel die overig is 
+outer joints= toont alle rijen uit alle tabeln
+
+#oef1.2.1 p38
+show columns from gene --> enzo voor alle tabeln
+select gene_name, count(*) as hoeveelheid from gene join transcript on gene.gene_id = transcript.gene_id join exon on exon.seq_region_start = gene.seq_region_start where gene_name = "MALAT1" ;
+
+#oef1.2.2 p38
+select transcript_id, concat(gene.seq_region_start,"-",gene.seq_region_end) as position from gene join transcript on gene.gene_id = transcript.gene_id join exon on exon.seq_region_start = gene.seq_region_start where transcript_id  = "237999" ;
+
+of (tweede manier is beter want veel sneller)
+
+select transcript_id, concat(exon.seq_region_end) as position from exon join exon_transcript on exon.exon_id = exon_transcript.exon_id where transcript_id  = "237999" ;
+
+#oef1.3 p38
+select transcript_id from gene join transcript on gene.gene_id = transcript.gene_id where gene.gene_name ="TP53";
+
+#oef 1.4 p38
+select transcript.transcript_id, exon.exon_id from gene join transcript on gene.gene_id = transcript.gene_id join exon_transcript on exon_transcript.transcript_id = transcript.transcript_id join exon on exon_transcript.exon_id = exon.exon_id where gene.gene_name ="TP53";
+
+#oef 1.5 -fout-
+select transcript.transcript_id, sum(seq_region_end - seq_region_start +1) as size from gene join script on gene.gene_id = transscript.geneIid join exon transcript on transcript.transcript_id = exon.transcript_id join exon on transcript.exon_id = exon.exon_id  where gene = "PT53" group by transcript.transcript_id order by size desc limit 1;
+
+#oef 1.6 p38
+select transcript_id, count(*) from exon_transcript join exon on exon_transcript.exon_id = exon.exon_id group by transcript_id order by count(*) desc limit 10;
+
+#oef 2.1 p39
+select transcript.transcript_id, gene_name FROM gene join transcript on transcript.gene_id = gene.gene_id where transcript_id = '260392';
+
+#oef 2.2 p39
+SELECT gene_name, exon.exon_id FROM gene join transcript on transcript.gene_id = gene.gene_id join exon_transcript on transcript.transcript_id = exon_transcript.transcript_id join exon on exon_transcript.exon_id = exon.exon_id where chromosome = 20 AND 44002590 between exon.seq_region_start and exon.seq_region_end; 
+
+#oef 2.3 p39
+select count(*) from gene join transcript on gene.gene_id = transcript.gene_id where gene.biotype != transcript.biotype;
+
+#oef 2.3.2
+select count(*) from gene join transcript on gene.gene_id = transcript.gene_id where gene.status != transcript.status;
+
+#oef 2.4 p39
+select chromosome, count(*)as total_genes from gene group by chromosome order by total_genes desc limit 1;
+
+#oef 2.5 p39
+select exon_id, (seq_region_end - seq_region_start +1) as length from exon order by length desc limit 1;
+#oef 2.6 p39
+select transcript.transcript_id, count(*) as total_exons from transcript join exon_transcript on exon_transcript.transcript_id = transcript.transcript_id join exon on exon_transcript.exon_id = exon.exon_id group by transcript.transcript_id order by total_exons desc limit 1; 
+
+#oef 1 pg 43 maar dan op bioinf db -> modorg
+create view testvieuw as select concat(genus," ",species) as org_name, acc, len, descr, name from gene join modorg on gene.mo_id=modorg.id join class on modorg.class_id = class.id;
+
+#oef 2 pg 43
+select * from testvieuw where descr like "%hemoglobin%";
+
+#oef 3 pg 43
+select * from testvieuw where descr like "%hemoglobin%" order by len;
+
+#oef 4 pg 43
+select max(len) from testvieuw where descr like "%hemoglobin%";
+
+#oef 3 pg 43
+select avg(len) from testvieuw where descr like "%hemoglobin%";
+
+#oef 3 pg 43
+select std(len) from testvieuw where descr like "%hemoglobin%";
+
+#oef1 pg 49
+terug naar terminal gaan 
+drop database <db_name> --> verwijderen
+
+#oef1 pg 50
+de ` moet niet 
+je moet je foreign keys + reflijn altijd op laatste zetten na je primary keys
+en moet op de volgoder van je tabeln letten wnt je kan niet verswijzen naar een onbestaande tabel
+zie file 
+
+										##les3
+#oef1 dia14
+select eq_name,purchase_date, ex_name from equipment join experiment on equipment.equipment_id=experiment.equipment_id where purchase_date > '1995-01-01';
+
+#oef2 dia14
+select * from lab_members where birth_date like '%-04-%';
+of
+select * from lab_members where month(birth_date) like '04';
+
+#oef3 dia14
+select concat(firstname,lastname) as name, count(*) as number_of_experiments from experiment join lab_members on members_id=performed_by group by name ;
+
+#oef4 dia14
+select distinct(eq_name), status, ex_name from equipment join experiment on experiment.equipment_id= equipment.equipment_id join results on experiment = experiment_id where status='COMPLETED;
+
+#oef5 dia14
+select concat(firstname,' ',lastname) as name, ex_name , status from results join on experiments on experiment.... join lab_members on ....
+
+#oef6 dia14
+select concat(firstname,' ',lastname) as name,subject from lab_member join members on training join training on training_id = training.training_id
+
+
+select subject, count(*) as number of parcipants from traings join members in training fssdflkjfsjklsfzejlzeklezefjklfsejoin lab_menmers ergnes
+
+###
+je kan via insert data typen en ook op rechts klikken en dn eerste optie klikken zo data invoeren
+zie connection mysql.php en dn moet je in localhost tonen
+
+							##les4
+oef4: 
+db.users.find( $and: [{status:"A"} $or: [{age: {$lt: "30"}},{type: "1" }]])
+of mr opl
+db.users.find({status:"A", $or: [{age: $lt:30},{type:1}]})
+
+oef5:
+db.users.find ({ $or: [{status:"P"},{status:"D"}]})
+of kan eenvoudiger
+db.users.find ({status:{ $in: ["P", "D"]}})
+
+oef6:
+db.users.find({favorites : { "artist" : "Picasso", "food" : "pizza" }})
+
+oef7:
+db.users.find({"badges.0":"black"})
+
+oef8:
+db.users.find({finished:{$elemMatch:{$gt:15, $lt:20}}})
+
+dia 44
+oef1
+db.users.update({"favorites.artist": "Picasso"},{ $set: {"favorites.artist": "Pisanello", type: "3"}},{multi: true})
+of
+db.users.updateMany({"favorites.artist": "Picasso"},{ $set: {"favorites.artist": "Pisanello", type: "3"}})
+
+oef2
+db.users.replaceOne({name: "abc"},{name: "amy", age: 34, type: 2, status: "P", favorites: { "artist": "Dali", food: "donuts" }})
+
+oef3
+db.users.replaceOne({name: "xyz"},{ name: "mee", age: 25, type: 1, status: "A", favorites: { "artist": "Matisse", food: "mango" }})
+
+dia 48
+oef1
+db.users.remove({status: "P"})
+
+oef2
+db.users.deleteOne({status: "D"})
+of
+db.users.remove({status: "D"},1)
+
+dia50
+oef:INSERT INTO users(user_id, age, status) VALUES ("bcd001", 45, "A");
+db.users.insert({user_id: "bcd001", age: "45", status: "A"})
+
+oef:SELECT * FROM users WHERE status != "A”;
+db.users.find({status: {$ne: "A"}})
+
+oef:SELECT * FROM users WHERE age > 25;
+db.users.find({age: {$gt:"25"} })
+
+oef:SELECT * FROM users WHERE status = "A" ORDER BY user_id DESC;  --> asec is = 1
+db.users.find({status: "A" }).sort({"user_id": -1})
+
+oef:SELECT COUNT(*) FROM users;
+db.users.find().count()
+of 
+db.users.count()
+
+oef:SELECT COUNT(user_id) FROM users;
+db.users.count("user_id": {$exists:true}})
+of 
+db.users.count("user_id": 1})
+of 
+db.users.find("user_id": {$exists:true}).count()}
+
+oef:SELECT DISTINCT(status) FROM users;
+db.users.distinct("status")
+
+oef:SELECT * FROM users LIMIT 1
+db.users.find().limit(1)
+
+oef: SELECT * FROM users LIMIT 5 SKIP 10;
+db.users.find().skip(10).limit(5)
+
+oef:UPDATE users SET age = age + 3 WHERE status = "A”;
+db.users.update({status: "A"}, {$inc: {age:3}},{multi:true})
+
+oef:DELETE FROM users WHERE status = "D”;
+db.users.remove({status: "D"})
+
+dia52
+
+oef2:
+db.zips.aggregate([{$group: {_id: {state:"$state", city: "$city"}, pop: { $sum: "$pop" }}},{$group: {_id:"$_id.state", avgCityPop: {$avg:"$pop"}}},{$sort:{avgCityPop:-1}}])
+
+oef3:
+db.zips.aggregate([{$group: {_id: {state:"$state", city: "$city"}, pop: { $sum: "$pop" }}},{$sort:{Pop:1}},{$group: {_id:"$_id.state", biggestcity: {$last: "$_id.city"},smallestcity: {$first: "$_id.city"}}}])
+
+					#### les 5
+dia 7
+> db.protCodingGenes.find({"Chromosome Name":22},{"Associated Gene Name":1}).sort({"Associated Gene Name": 1}).limit(10)
+> db.protCodingGenes.find({"Chromosome Name":12},{"Associated Gene Name:1"}).sort({"Gene Start (bp)": -1}).limit(10).skip(10)
+werkt niet 
+> db.protCodingGenes.distinct("Associated Gene Name").length
+> db.protCodingGenes.aggregate([{$group:{_id:"$Associated Gene Name",count:{$sum:1}}},{$sort:{count:-1}},{$limit{0}}])
+werkt niet
+> db.protCodingGenes.aggregate([{$group:{_id:"$Chromosone Name",count:{$sum:1}}},{$sort:{count:-1}}])
+
+
+dia 57
+in de homedirectory geven
+#oef1
+[guest@howest ~]$ curl 'http://rest.ensembl.org/archive/id/ENSG00000141510' -H 'Content-type:application/Json'
+
+[guest@howest ~]$ curl 'http://rest.ensembl.org/sequence/id/ENSG00000141510' -H 'Content-type:application/Json'
+nu krijg jz de sequnece vn de file
+
+#oef2
+[guest@howest ~]$ curl 'http://rest.ensembl.org/archive/id/ENSG00000012048' 'http://rest.ensembl.org/archive/id/ENSG00000136997' -H 'Content-type:application/Json'
+of (verbetering)
+[guest@howest ~]$ curl 'http://rest.ensembl.org/archive/id' -H 'Content-type:application/Json' -H 'Accept:application/Json' -X POST -d '{"id":["ENSG00000012048","ENSG00000136997"]}'
+
+#oef3
+curl 'http://rest.ensembl.org/homology/id/ENSG00000159763?format=condensed;type=orthologues;target_taxon=10090' -H 'Content-type:text/xml'
+
+#oef3.2
+curl 'http://rest.ensembl.org/homology/symbol/human/BRCA2?format=condensed;type=orthologues;target_taxon=10090' -H 'Content-type:text/xml'
+
+#oef4
+curl 'http://rest.ensembl.org/sequence/id/ENST00000288602.10?type=genomic' -H 'Content-type:text/x-fasta'
+
+#oef 5
+curl 'http://rest.ensembl.org/sequence/region/human/2:100000..100099:1' -H 'Content-type:text/plain'
+
+#oef 6
+curl 'http://rest.ensembl.org/taxonomy/id/10090' -H 'Content-type:application/Json'
+
+#oef7
+
+curl 'http://rest.ensembl.org/lookup/id/ENSMUSG00000059552?format=condensed' -H 'Content-type:text/xml'
+
+#oef8.1
+curl 'http://rest.ensembl.org/info/assembly/homo_sapiens/2' -H 'Content-type:text/xml'
+curl 'http://rest.ensembl.org/info/assembly/mus_musculus/2' -H 'Content-type:text/xml'
+
+#oef8.2
+curl 'http://rest.ensembl.org/info/assembly/homo_sapiens/7' -H 'Content-type:text/xml'
+curl 'http://rest.ensembl.org/info/assembly/mus_musculus/7' -H 'Content-type:text/xml'
+#oef8.3
+curl 'http://rest.ensembl.org/info/assembly/homo_sapiens/X' -H 'Content-type:text/xml'
+curl 'http://rest.ensembl.org/info/assembly/mus_musculus/X' -H 'Content-type:text/xml'
+#oef8.4
+dan vergelijken, kan je niet in 1 keer opzoekn
+
+
+
